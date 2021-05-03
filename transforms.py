@@ -26,6 +26,17 @@ class Compose(object):
             image, target = t(image, target)
         return image, target
 
+class RandomizeColor(object):
+    def __init__(self, delta_adjust):
+        self.delta_adjust = delta_adjust
+
+    def __call__(self, image, target):
+        adjust_number = random.uniform(1.0 - self.delta_adjust, 1.0 + self.delta_adjust)
+        image = F.adjust_brightness(image, adjust_number)
+        image = F.adjust_contrast(image, adjust_number)
+        image = F.adjust_saturation(image, adjust_number)
+        return image, target
+
 
 class Resize(object):
     def __init__(self, size):
@@ -33,7 +44,7 @@ class Resize(object):
 
     def __call__(self, image, target):
         image = F.resize(image, self.size)
-        target = F.resize(target, self.size, interpolation=Image.NEAREST)
+        target = F.resize(target, self.size, interpolation=F.InterpolationMode("nearest"))
         return image, target
 
 class RandomResize(object):
@@ -46,7 +57,7 @@ class RandomResize(object):
     def __call__(self, image, target):
         size = random.randint(self.min_size, self.max_size)
         image = F.resize(image, size)
-        target = F.resize(target, size, interpolation=Image.NEAREST)
+        target = F.resize(target, size, interpolation=F.InterpolationMode("nearest"))
         return image, target
 
 
@@ -87,7 +98,7 @@ class CenterCrop(object):
 class ToTensor(object):
     def __call__(self, image, target):
         image = F.to_tensor(image)
-        target = torch.as_tensor(np.asarray(target), dtype=torch.int64)
+        target = torch.as_tensor(np.asarray(target).copy(), dtype=torch.int64)
         return image, target
 
 

@@ -42,6 +42,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='PyTorch Segmentation Training')
 
     parser.add_argument('data', metavar='DIR', help='path to dataset')
+    parser.add_argument('--num-classes', default='21', type=int)
     parser.add_argument('--dataset', default='voc', help='dataset type: voc, voc_aug, coco, cityscapes, deepscene, mhp, nyu, sun (default: voc)')
     parser.add_argument('-a', '--arch', metavar='ARCH', default='fcn_resnet18',
                         choices=model_names,
@@ -125,11 +126,14 @@ def get_transform(train, resolution):
         if train:
             transforms.append(T.RandomHorizontalFlip(0.5))
             transforms.append(T.RandomCrop(crop_size))
+            transforms.append(T.RandomizeColor(0.2))
     else:
         transforms.append(T.Resize(resolution))
 
         if train:
             transforms.append(T.RandomHorizontalFlip(0.5))
+            transforms.append(T.RandomizeColor(0.2))
+
 
     transforms.append(T.ToTensor())
     transforms.append(T.Normalize(mean=[0.485, 0.456, 0.406],
@@ -215,6 +219,7 @@ def main(args):
     
     # load the train and val datasets
     dataset, num_classes = get_dataset(args.dataset, args.data, "train", get_transform(train=True, resolution=resolution))
+    num_classes = args.num_classes
     dataset_test, _ = get_dataset(args.dataset, args.data, "val", get_transform(train=False, resolution=resolution))
 
     if args.distributed:

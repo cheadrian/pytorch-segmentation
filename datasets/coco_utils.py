@@ -92,7 +92,7 @@ def get_coco(root, image_set, transforms):
                 1, 64, 20, 63, 7, 72]
 
     transforms = Compose([
-        FilterAndRemapCocoCategories(CAT_LIST, remap=True),
+        FilterAndRemapCocoCategories(CAT_LIST, remap=False),
         ConvertCocoPolysToMask(),
         transforms
     ])
