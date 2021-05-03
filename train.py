@@ -43,6 +43,7 @@ def parse_args():
 
     parser.add_argument('data', metavar='DIR', help='path to dataset')
     parser.add_argument('--num-classes', default='21', type=int)
+    parser.add_argument('--valid-every', default='10', type=int)
     parser.add_argument('--dataset', default='voc', help='dataset type: voc, voc_aug, coco, cityscapes, deepscene, mhp, nyu, sun (default: voc)')
     parser.add_argument('-a', '--arch', metavar='ARCH', default='fcn_resnet18',
                         choices=model_names,
@@ -297,35 +298,37 @@ def main(args):
         # train the model over the next epoc
         train_one_epoch(model, criterion, optimizer, data_loader, lr_scheduler, device, epoch, args.print_freq)
 
-        # test the model on the val dataset
-        confmat = evaluate(model, data_loader_test, device=device, num_classes=num_classes)
-        print(confmat)
+        if epoch % args.valid_every == 0:
 
-        # save model checkpoint
-        checkpoint_path = os.path.join(args.model_dir, 'model_{}.pth'.format(epoch))
+          # test the model on the val dataset
+          confmat = evaluate(model, data_loader_test, device=device, num_classes=num_classes)
+          print(confmat)
 
-        utils.save_on_master(
-            {
-                'model': model_without_ddp.state_dict(),
-                'optimizer': optimizer.state_dict(),
-                'epoch': epoch,
-                'args': args,
-                'arch': args.arch,
-                'dataset': args.dataset,                
-                'num_classes': num_classes,
-                'resolution': resolution,
-                'accuracy': confmat.acc_global,
-                'mean_IoU': confmat.mean_IoU
-            },
-            checkpoint_path)
+          # save model checkpoint
+          checkpoint_path = os.path.join(args.model_dir, 'model_{}.pth'.format(epoch))
 
-        print('saved checkpoint to:  {:s}  ({:.3f}% mean IoU, {:.3f}% accuracy)'.format(checkpoint_path, confmat.mean_IoU, confmat.acc_global))
+          utils.save_on_master(
+              {
+                  'model': model_without_ddp.state_dict(),
+                  'optimizer': optimizer.state_dict(),
+                  'epoch': epoch,
+                  'args': args,
+                  'arch': args.arch,
+                  'dataset': args.dataset,                
+                  'num_classes': num_classes,
+                  'resolution': resolution,
+                  'accuracy': confmat.acc_global,
+                  'mean_IoU': confmat.mean_IoU
+              },
+              checkpoint_path)
 
-        if confmat.mean_IoU > best_IoU:
-            best_IoU = confmat.mean_IoU
-            best_path = os.path.join(args.model_dir, 'model_best.pth')
-            shutil.copyfile(checkpoint_path, best_path)
-            print('saved best model to:  {:s}  ({:.3f}% mean IoU, {:.3f}% accuracy)'.format(best_path, best_IoU, confmat.acc_global))
+          print('saved checkpoint to:  {:s}  ({:.3f}% mean IoU, {:.3f}% accuracy)'.format(checkpoint_path, confmat.mean_IoU, confmat.acc_global))
+
+          if confmat.mean_IoU > best_IoU:
+              best_IoU = confmat.mean_IoU
+              best_path = os.path.join(args.model_dir, 'model_best.pth')
+              shutil.copyfile(checkpoint_path, best_path)
+              print('saved best model to:  {:s}  ({:.3f}% mean IoU, {:.3f}% accuracy)'.format(best_path, best_IoU, confmat.acc_global))
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
