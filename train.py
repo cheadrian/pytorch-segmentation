@@ -74,6 +74,7 @@ def parse_args():
     parser.add_argument('--resume', default='', help='resume from checkpoint')
     parser.add_argument("--test-only", dest="test_only", help="Only test the model", action="store_true")
     parser.add_argument("--pretrained", dest="pretrained", help="Use pre-trained models (only supported for fcn_resnet101)", action="store_true")
+    parser.add_argument('--adjust-contrast-saturation-val', default=1.0, type=float)
 
     # distributed training parameters
     parser.add_argument('--world-size', default=1, type=int,
@@ -134,6 +135,7 @@ def get_transform(train, resolution):
         if train:
             transforms.append(T.RandomHorizontalFlip(0.5))
             transforms.append(T.RandomizeColor(0.2))
+            transforms.append(T.IncreaseContrastSaturation(args.adjust_contrast_saturation_val))
 
 
     transforms.append(T.ToTensor())

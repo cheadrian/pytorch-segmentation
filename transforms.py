@@ -37,6 +37,15 @@ class RandomizeColor(object):
         image = F.adjust_saturation(image, adjust_number)
         return image, target
 
+class IncreaseContrastSaturation(object):
+    def __init__(self, delta_adjust):
+        self.delta_adjust = delta_adjust
+
+    def __call__(self, image, target):
+        image = F.adjust_contrast(image, self.delta_adjust)
+        image = F.adjust_saturation(image, self.delta_adjust)
+        return image, target
+
 
 class Resize(object):
     def __init__(self, size):
