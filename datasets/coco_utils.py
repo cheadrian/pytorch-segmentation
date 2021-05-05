@@ -3,17 +3,19 @@ import copy
 import torch
 import torch.utils.data
 import torchvision
+import torchdata as td
+
 
 from PIL import Image
 from transforms import Compose
 from pycocotools import mask as coco_mask
-
+from functools import lru_cache
 
 class FilterAndRemapCocoCategories(object):
     def __init__(self, categories, remap=True):
         self.categories = categories
         self.remap = remap
-
+        
     def __call__(self, image, anno):
         anno = [obj for obj in anno if obj["category_id"] in self.categories]
         if not self.remap:
@@ -59,7 +61,6 @@ class ConvertCocoPolysToMask(object):
         target = Image.fromarray(target.numpy())
         return image, target
 
-
 def _coco_remove_images_without_annotations(dataset, cat_list=None):
     def _has_valid_annotation(anno):
         # if it's empty, there is no annotation
@@ -69,6 +70,8 @@ def _coco_remove_images_without_annotations(dataset, cat_list=None):
         return sum(obj["area"] for obj in anno) > 1000
 
     assert isinstance(dataset, torchvision.datasets.CocoDetection)
+    dataset = td.datasets.WrapDataset(dataset).cache()
+
     ids = []
     for ds_idx, img_id in enumerate(dataset.ids):
         ann_ids = dataset.coco.getAnnIds(imgIds=img_id, iscrowd=None)
@@ -80,7 +83,6 @@ def _coco_remove_images_without_annotations(dataset, cat_list=None):
 
     dataset = torch.utils.data.Subset(dataset, ids)
     return dataset
-
 
 def get_coco(root, image_set, transforms):
     PATHS = {
