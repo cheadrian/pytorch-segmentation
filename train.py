@@ -80,6 +80,8 @@ def parse_args():
     parser.add_argument('--world-size', default=1, type=int,
                         help='number of distributed processes')
     parser.add_argument('--dist-url', default='env://', help='url used to set up distributed training')
+    parser.add_argument('--mean-norm', default=0.5, type=float, help='mean value for normalization of image')
+    parser.add_argument('--std-norm', default=0.5, type=float, help='std value for normalization of image')
 
     args = parser.parse_args()
     return args
@@ -139,8 +141,10 @@ def get_transform(train, resolution):
 
 
     transforms.append(T.ToTensor())
-    transforms.append(T.Normalize(mean=[0.485, 0.456, 0.406],
-                                  std=[0.229, 0.224, 0.225]))
+    mean_norm = args.mean_norm
+    std_norm = args.std_norm
+    transforms.append(T.Normalize(mean=[mean_norm, mean_norm, mean_norm],
+                                  std=[std_norm, std_norm, std_norm]))
 
     return T.Compose(transforms)
 
