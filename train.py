@@ -82,6 +82,7 @@ def parse_args():
     parser.add_argument('--dist-url', default='env://', help='url used to set up distributed training')
     parser.add_argument('--mean-norm', default=0.5, type=float, help='mean value for normalization of image')
     parser.add_argument('--std-norm', default=0.5, type=float, help='std value for normalization of image')
+    parser.add_argument('--randomize-color', default=0.0, type=float, help='randomize contrast, saturation, brightness of train dataset')
 
     args = parser.parse_args()
     return args
@@ -130,13 +131,15 @@ def get_transform(train, resolution):
         if train:
             transforms.append(T.RandomHorizontalFlip(0.5))
             transforms.append(T.RandomCrop(crop_size))
-            transforms.append(T.RandomizeColor(0.2))
+            if(args.randomize_color > 0.0):
+              transforms.append(T.RandomizeColor(args.randomize_color))
     else:
         transforms.append(T.Resize(resolution))
 
         if train:
             transforms.append(T.RandomHorizontalFlip(0.5))
-            transforms.append(T.RandomizeColor(0.2))
+            if(args.randomize_color > 0.0):
+              transforms.append(T.RandomizeColor(args.randomize_color))
             transforms.append(T.IncreaseContrastSaturation(args.adjust_contrast_saturation_val))
 
 
