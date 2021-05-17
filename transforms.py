@@ -33,7 +33,9 @@ class RandomizeColor(object):
     def __call__(self, image, target):
         adjust_number = random.uniform(1.0 - self.delta_adjust, 1.0 + self.delta_adjust)
         image = F.adjust_brightness(image, adjust_number)
+        adjust_number = random.uniform(1.0 - self.delta_adjust, 1.0 + self.delta_adjust)
         image = F.adjust_contrast(image, adjust_number)
+        adjust_number = random.uniform(1.0 - self.delta_adjust, 1.0 + self.delta_adjust)
         image = F.adjust_saturation(image, adjust_number)
         return image, target
 
